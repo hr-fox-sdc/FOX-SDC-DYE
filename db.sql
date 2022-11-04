@@ -31,16 +31,24 @@ CREATE TABLE Answer (
 
 COPY Answer(id, question_id, body, date_written, answerer_name, answerer_email, reported, helpful) FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers.csv' DELIMITER ',' CSV HEADER;
 
-DROP TABLE IF EXISTS "Answer Image" cascade;
+DROP TABLE IF EXISTS Answer_Image cascade;
 
-CREATE TABLE "Answer Image" (
+CREATE TABLE Answer_Image (
   id SERIAL,
   answer_id INTEGER NOT NULL DEFAULT NULL,
   url CHAR(200) NOT NULL,
   PRIMARY KEY (id)
 );
 
-COPY "Answer Image"(id, answer_id, url) FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers_photos.csv' DELIMITER ',' CSV HEADER;
+COPY Answer_Image(id, answer_id, url) FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers_photos.csv' DELIMITER ',' CSV HEADER;
 
 ALTER TABLE Answer ADD FOREIGN KEY (question_id) REFERENCES Question (id);
-ALTER TABLE "Answer Image" ADD FOREIGN KEY (answer_id) REFERENCES Answer (id);
+ALTER TABLE Answer_Image ADD FOREIGN KEY (answer_id) REFERENCES Answer (id);
+
+SELECT setval('question_id_seq', COALESCE((SELECT MAX(id)+1 FROM question), 1), false);
+SELECT setval('answer_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer), 1), false);
+SELECT setval('answer_image_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer_image), 1), false);
+
+CREATE INDEX question_index ON Question (id);
+CREATE INDEX answer_index ON Answer (id);
+CREATE INDEX image_index ON Answer_Image (id);
