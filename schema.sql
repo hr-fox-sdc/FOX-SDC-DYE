@@ -19,7 +19,7 @@ CREATE TABLE Question (
   date_written CHAR(60) NOT NULL,
   asker_name CHAR(60) NOT NULL,
   asker_email CHAR(60) NOT NULL,
-  reported INTEGER NOT NULL DEFAULT 0,
+  reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
@@ -38,7 +38,7 @@ CREATE TABLE Answer (
   date_written CHAR(60) NOT NULL,
   answerer_name CHAR(60) NOT NULL,
   answerer_email CHAR(60) NOT NULL,
-  reported INTEGER NOT NULL DEFAULT 0,
+  reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );

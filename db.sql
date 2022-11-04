@@ -7,7 +7,7 @@ CREATE TABLE Question (
   date_written CHAR(60) NOT NULL,
   asker_name CHAR(60) NOT NULL,
   asker_email CHAR(60) NOT NULL,
-  reported INTEGER NOT NULL DEFAULT 0,
+  reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
@@ -24,7 +24,7 @@ CREATE TABLE Answer (
   date_written CHAR(60) NOT NULL,
   answerer_name CHAR(60) NOT NULL,
   answerer_email CHAR(60) NOT NULL,
-  reported INTEGER NOT NULL DEFAULT 0,
+  reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
@@ -52,3 +52,6 @@ SELECT setval('answer_image_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer_imag
 CREATE INDEX question_index ON Question (id);
 CREATE INDEX answer_index ON Answer (id);
 CREATE INDEX image_index ON Answer_Image (id);
+CREATE INDEX questionID_index ON Answer (question_id);
+CREATE INDEX productID_index ON Question (product_id);
+CREATE INDEX answerImage_index ON Answer_Image (answer_id);
