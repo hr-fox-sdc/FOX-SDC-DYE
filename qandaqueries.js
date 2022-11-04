@@ -10,7 +10,7 @@ const getQuestions = (req, res) => {
     ( select
           question.id as "question_id",
           question.body as "question_body",
-          question.date_written as "question_date",
+          TO_CHAR(TO_TIMESTAMP(question.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "question_date",
           question.asker_name,
           question.helpful as "question_helpfulness",
           question.reported,
@@ -19,7 +19,7 @@ const getQuestions = (req, res) => {
               ( select
                 answer.id as "id",
                 answer.body as "body",
-                answer.date_written as "date",
+                TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "date",
                 answer.answerer_name,
                 answer.helpful as "helpfulness",
                 (select json_agg(photos) from
@@ -35,7 +35,10 @@ const getQuestions = (req, res) => {
   pool
     .query(query)
     .then((data) => {
-      res.send(data.rows)
+      res.send({
+        "product_id":productID,
+        "results":data.rows
+      })
     })
     .catch((err) => {
       console.log(err)
@@ -49,12 +52,25 @@ const getAnswers = (req, res) => {
   let page = req.body.page || req.query.page || 1
 
   query = {
-    text: `select * from ( select answer.id, answer.body, answer.date_written, answer.answerer_name, answer.helpful, (select json_agg(photos) from (select * from answer_image where answer_id = answer.id) photos) as photos from answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
+    text: `select * from
+    ( select
+        answer.id as "answer_id",
+        answer.body,
+        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "date",
+        answer.answerer_name,
+        answer.helpful as "helpfulness",
+          (select json_agg(photos) from (select * from answer_image where answer_id = answer.id) photos) as photos
+      from answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
   }
   pool
     .query(query)
     .then((data) => {
-      res.send(data.rows)
+      res.send({
+        "question": questionID,
+        "page": page,
+        "count": count,
+        "results": data.rows
+      })
     })
     .catch((err) => {
       console.log(err)
