@@ -6,7 +6,18 @@ const getQuestions = (req, res) => {
   let page = req.body.page || req.params.page || 1
 
   query = {
-    text: `select * from ( select question.id, question.body, question.date_written, question.asker_name, question.helpful, question.reported, (select json_agg(answers) from (select * from answer where question_id = question.id) answers) as answers from question where product_id = ${productID} order by id limit ${count} offset ${(page * count) - count}) questions;`
+    text: `select * from ( select
+      question.id as "question_id",
+      question.body as "question_body",
+      question.date_written as "question_date",
+      question.asker_name,
+      question.helpful as "question_helpfulness",
+      question.reported,
+      (select json_object_agg(id,answers) from
+      (select * from answer where question_id = question.id)
+      answers)
+      as answers
+      from question where product_id = ${productID} AND reported = false order by id limit ${count} offset ${(page * count) - count}) questions;`
   }
   pool
     .query(query)
