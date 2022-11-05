@@ -1,7 +1,7 @@
 const pool = require('./pool.js')
 
 const getQuestions = (req, res) => {
-  let productID = req.body.product_id || req.params.product_id
+  let productID = req.body.product_id || req.params.product_id || req.query.product_id
   let count = req.body.count || req.params.count || 5
   let page = req.body.page || req.params.page || 1
 
@@ -23,7 +23,7 @@ const getQuestions = (req, res) => {
                 answer.answerer_name,
                 answer.helpful as "helpfulness",
                 (select json_agg(photos) from
-                (select * from answer_image where answer_id = answer.id) photos)
+                (select url from answer_image where answer_id = answer.id) photos)
                 as photos
                 from answer where question_id = question.id
               ) answer
@@ -173,14 +173,13 @@ const questionReport = (req, res) => {
 
 const answerHelpful = (req, res) => {
   let answerID = req.body.answer_id || req.params.answer_id || req.query.answer_id
-  console.log(answerID)
+
   query = {
     text: `UPDATE Answer SET helpful = helpful + 1 WHERE id = ${answerID}`
   }
   pool
     .query(query)
     .then((data) => {
-      console.log(data)
       res.send()
     })
     .catch((err) => {
