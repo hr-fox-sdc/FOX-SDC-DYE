@@ -6,32 +6,31 @@ const getQuestions = (req, res) => {
   let page = req.body.page || req.params.page || 1
 
   query = {
-    text: `select * from
-    ( select
-          question.id as "question_id",
-          question.body as "question_body",
-          TO_CHAR(TO_TIMESTAMP(question.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "question_date",
+    text: `SELECT * FROM
+    ( SELECT
+          question.id AS "question_id",
+          question.body AS "question_body",
+          TO_CHAR(TO_TIMESTAMP(question.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "question_date",
           question.asker_name,
-          question.helpful as "question_helpfulness",
+          question.helpful AS "question_helpfulness",
           question.reported,
-          (select json_object_agg(id,answers) from
-            (select * from
-              ( select
-                answer.id as "id",
-                answer.body as "body",
-                TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "date",
+          (SELECT jsonb_object_agg(id,answers) FROM
+            (SELECT * FROM
+              ( SELECT
+                answer.id AS "id",
+                answer.body AS "body",
+                TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
                 answer.answerer_name,
-                answer.helpful as "helpfulness",
-                (select json_agg(photos) from
-                (select url from answer_image where answer_id = answer.id) photos)
-                as photos
-                from answer where question_id = question.id
+                answer.helpful AS "helpfulness",
+                (SELECT jsonb_agg(url) FROM answer_image where answer_id = answer.id)
+                AS photos
+                FROM answer where question_id = question.id
               ) answer
             ) answers
-          ) as answers from question where product_id = ${productID} AND reported = false order by id limit ${count} offset ${(page * count) - count}
+          ) AS answers FROM question where product_id = ${productID} AND reported = false ORDER by id limit ${count} OFFSET ${(page * count) - count}
     ) questions;`
-
   }
+
   pool
     .query(query)
     .then((data) => {
@@ -52,15 +51,15 @@ const getAnswers = (req, res) => {
   let page = req.body.page || req.query.page || 1
 
   query = {
-    text: `select * from
-    ( select
-        answer.id as "answer_id",
+    text: `SELECT * FROM
+     (SELECT
+        answer.id AS "answer_id",
         answer.body,
-        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') as "date",
+        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
         answer.answerer_name,
-        answer.helpful as "helpfulness",
-          (select json_agg(photos) from (select * from answer_image where answer_id = answer.id) photos) as photos
-      from answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
+        answer.helpful AS "helpfulness",
+          (SELECT jsonb_agg(photos) FROM (SELECT answer_image.id, answer_image.url FROM answer_image where answer_id = answer.id) photos) AS "photos"
+      FROM answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
   }
   pool
     .query(query)
