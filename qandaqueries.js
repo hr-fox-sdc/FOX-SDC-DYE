@@ -6,38 +6,49 @@ const getQuestions = (req, res) => {
   let page = req.body.page || req.params.page || 1
 
   query = {
-    text: `SELECT * FROM
-    ( SELECT
-          question.id AS "question_id",
-          question.body AS "question_body",
-          TO_CHAR(TO_TIMESTAMP(question.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "question_date",
-          question.asker_name,
-          question.helpful AS "question_helpfulness",
-          question.reported,
-          (SELECT jsonb_object_agg(id,answers) FROM
-            (SELECT * FROM
-              ( SELECT
-                answer.id AS "id",
-                answer.body AS "body",
-                TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
-                answer.answerer_name,
-                answer.helpful AS "helpfulness",
-                (SELECT jsonb_agg(url) FROM answer_image where answer_id = answer.id)
-                AS photos
-                FROM answer where question_id = question.id
-              ) answer
-            ) answers
-          ) AS answers FROM question where product_id = ${productID} AND reported = false ORDER by id limit ${count} OFFSET ${(page * count) - count}
-    ) questions;`
+    text:
+    `SELECT json_build_object
+      (
+        'product_id', ${productID},
+        'results',
+        (SELECT json_agg(
+          (json_build_object
+            (
+              'question_id', id,
+              'question_body', body,
+              'question_date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
+              'asker_name', asker_name,
+              'question_helpfulness', helpful,
+              'reported', reported,
+              'answers',
+              (SELECT json_object_agg
+                (id,
+                  (SELECT json_build_object
+                    (
+                    'id', id,
+                    'body', body,
+                    'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
+                    'answerer_name', answerer_name,
+                    'helpfulness', helpful,
+                    'photos',
+                      (SELECT jsonb_agg(url) FROM answer_image where answer_id = answer.id)
+                    )
+                  )
+                ) FROM Answer where Answer.question_id = question.id
+              )
+            )
+          )
+        ) FROM Question where product_id = ${productID} AND reported = false LIMIT ${count} OFFSET ${(page * count) - count}
+      )
+    )`
   }
 
   pool
     .query(query)
     .then((data) => {
-      res.send({
-        "product_id":productID,
-        "results":data.rows
-      })
+      res.send(
+        data.rows[0].json_build_object
+      )
     })
     .catch((err) => {
       console.log(err)
