@@ -12,8 +12,9 @@ CREATE TABLE Question (
   PRIMARY KEY (id)
 );
 
-COPY question(id, product_id, body, date_written, asker_name, asker_email, reported, helpful)
-FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/questions.csv' DELIMITER ',' CSV HEADER;
+COPY Question(id, product_id, body, date_written, asker_name, asker_email, reported, helpful)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/questions.csv'
+DELIMITER ',' CSV HEADER;
 
 DROP TABLE IF EXISTS Answer cascade;
 
@@ -29,7 +30,9 @@ CREATE TABLE Answer (
   PRIMARY KEY (id)
 );
 
-COPY Answer(id, question_id, body, date_written, answerer_name, answerer_email, reported, helpful) FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers.csv' DELIMITER ',' CSV HEADER;
+COPY Answer(id, question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers.csv'
+DELIMITER ',' CSV HEADER;
 
 DROP TABLE IF EXISTS Answer_Image cascade;
 
@@ -40,7 +43,9 @@ CREATE TABLE Answer_Image (
   PRIMARY KEY (id)
 );
 
-COPY Answer_Image(id, answer_id, url) FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers_photos.csv' DELIMITER ',' CSV HEADER;
+COPY Answer_Image(id, answer_id, url)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers_photos.csv'
+DELIMITER ',' CSV HEADER;
 
 ALTER TABLE Answer ADD FOREIGN KEY (question_id) REFERENCES Question (id);
 ALTER TABLE Answer_Image ADD FOREIGN KEY (answer_id) REFERENCES Answer (id);
@@ -55,3 +60,5 @@ CREATE INDEX image_index ON Answer_Image (id);
 CREATE INDEX questionID_index ON Answer (question_id);
 CREATE INDEX productID_index ON Question (product_id);
 CREATE INDEX answerImage_index ON Answer_Image (answer_id);
+CREATE INDEX questionReported_index ON Question (reported);
+CREATE INDEX answerReported_index ON Answer (reported);

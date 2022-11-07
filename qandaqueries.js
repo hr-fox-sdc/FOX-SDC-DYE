@@ -32,14 +32,14 @@ const getQuestions = (req, res) => {
                       'answerer_name', answerer_name,
                       'helpfulness', helpful,
                       'photos',
-                        (SELECT COALESCE(json_agg(url),'[]'::json) FROM answer_image where answer_id = answer.id)
+                        (SELECT COALESCE(json_agg(url),'[]'::json) FROM answer_image WHERE answer_id = answer.id)
                       )
                   )
-                ) FROM Answer where Answer.question_id = question.id
+                ) FROM Answer WHERE Answer.question_id = question.id
               )
             )
           )
-        ) FROM Question where product_id = ${productID} AND reported = false LIMIT ${count} OFFSET ${(page * count) - count}
+        ) FROM Question WHERE product_id = ${productID} AND reported = false LIMIT ${count} OFFSET ${(page * count) - count}
       )
     )`
   }
