@@ -11,28 +11,29 @@ const getQuestions = (req, res) => {
       (
         'product_id', ${productID},
         'results',
-        (SELECT json_agg(
-          (json_build_object
-            (
-              'question_id', id,
-              'question_body', body,
-              'question_date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
-              'asker_name', asker_name,
-              'question_helpfulness', helpful,
-              'reported', reported,
-              'answers',
-              (SELECT json_object_agg
-                (id,
-                  (SELECT json_build_object
-                    (
-                    'id', id,
-                    'body', body,
-                    'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
-                    'answerer_name', answerer_name,
-                    'helpfulness', helpful,
-                    'photos',
-                      (SELECT jsonb_agg(url) FROM answer_image where answer_id = answer.id)
-                    )
+        (SELECT json_agg
+          (
+            (json_build_object
+              (
+                'question_id', id,
+                'question_body', body,
+                'question_date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+                'asker_name', asker_name,
+                'question_helpfulness', helpful,
+                'reported', reported,
+                'answers',
+                (SELECT json_object_agg
+                  (id,
+                    (SELECT json_build_object
+                      (
+                      'id', id,
+                      'body', body,
+                      'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+                      'answerer_name', answerer_name,
+                      'helpfulness', helpful,
+                      'photos',
+                        (SELECT COALESCE(json_agg(url),'[]'::json) FROM answer_image where answer_id = answer.id)
+                      )
                   )
                 ) FROM Answer where Answer.question_id = question.id
               )
@@ -62,25 +63,44 @@ const getAnswers = (req, res) => {
   let page = req.body.page || req.query.page || 1
 
   query = {
-    text: `SELECT * FROM
-     (SELECT
-        answer.id AS "answer_id",
-        answer.body,
-        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
-        answer.answerer_name,
-        answer.helpful AS "helpfulness",
-          (SELECT jsonb_agg(photos) FROM (SELECT answer_image.id, answer_image.url FROM answer_image where answer_id = answer.id) photos) AS "photos"
-      FROM answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
+    text:
+    `SELECT json_build_object
+        (
+          'question', ${questionID},
+          'page', ${page},
+          'count', ${count},
+          'results',
+          (SELECT json_agg
+            (
+              (json_build_object
+                (
+                  'answer_id', id,
+                  'body', body,
+                  'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+                  'answerer_name', answerer_name,
+                  'helpfulness', helpful,
+                  'photos',
+                    (SELECT COALESCE(json_agg
+                      (
+                        (json_build_object
+                          (
+                            'id', id,
+                            'url', url
+                          )
+                        )
+                      ),'[]'::json) FROM Answer_Image where answer_id = answer.id
+                    )
+                )
+              )
+            ) FROM Answer WHERE question_id = ${questionID} LIMIT ${count} OFFSET ${(page * count) - count}
+          )
+        )`
   }
+
   pool
     .query(query)
     .then((data) => {
-      res.send({
-        "question": questionID,
-        "page": page,
-        "count": count,
-        "results": data.rows
-      })
+      res.send(data.rows[0].json_build_object)
     })
     .catch((err) => {
       console.log(err)
@@ -225,3 +245,52 @@ module.exports = {
   answerHelpful,
   answerReport
 }
+
+
+/*
+FUNCTIONAL GET ANSWERS
+SELECT * FROM
+     (SELECT
+        answer.id AS "answer_id",
+        answer.body,
+        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
+        answer.answerer_name,
+        answer.helpful AS "helpfulness",
+          (SELECT jsonb_agg(photos) FROM (SELECT answer_image.id, answer_image.url FROM answer_image where answer_id = answer.id) photos) AS "photos"
+      FROM answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
+
+
+
+OPTIMIZED GET ANSWERS
+`SELECT json_build_object
+        (
+          'question', ${questionID},
+          'page', ${page},
+          'count', ${count},
+          'results',
+          (SELECT json_agg
+            (
+              (json_build_object
+                (
+                  'answer_id', id,
+                  'body', body,
+                  'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
+                  'answerer_name', answerer_name,
+                  'helpfulness', helpful,
+                  'photos',
+                    (SELECT json_agg
+                      (
+                        (json_build_object
+                          (
+                            'id', id,
+                            'url', url
+                          )
+                        )
+                      ) FROM Answer_Image where answer_id = answer.id
+                    )
+                )
+              )
+            ) FROM Answer WHERE question_id = ${questionID} LIMIT ${count} OFFSET ${(page * count) - count}
+          )
+        )`
+*/
