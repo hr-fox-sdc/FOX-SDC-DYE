@@ -1,15 +1,3 @@
--- ---
--- Globals
--- ---
-
--- SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
--- SET FOREIGN_KEY_CHECKS=0;
-
--- ---
--- Table 'Question'
---
--- ---
-
 DROP TABLE IF EXISTS Question cascade;
 
 CREATE TABLE Question (
@@ -24,10 +12,9 @@ CREATE TABLE Question (
   PRIMARY KEY (id)
 );
 
--- --- id,product_id,body,date_written,asker_name,asker_email,reported,helpful
--- Table 'Answer'
---
--- ---
+COPY Question(id, product_id, body, date_written, asker_name, asker_email, reported, helpful)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/questions.csv'
+DELIMITER ',' CSV HEADER;
 
 DROP TABLE IF EXISTS Answer cascade;
 
@@ -43,10 +30,9 @@ CREATE TABLE Answer (
   PRIMARY KEY (id)
 );
 
--- ---id,question_id,body,date_written,answerer_name,answerer_email,reported,helpful
--- Table 'Answer Image'
---
--- ---
+COPY Answer(id, question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers.csv'
+DELIMITER ',' CSV HEADER;
 
 DROP TABLE IF EXISTS Answer_Image cascade;
 
@@ -57,9 +43,9 @@ CREATE TABLE Answer_Image (
   PRIMARY KEY (id)
 );
 
--- ---id,answer_id,url
--- Foreign Keys
--- ---
+COPY Answer_Image(id, answer_id, url)
+FROM '/Users/andrewdye/Senior_Hackreactor/SDC/FOX-SDC-DYE/data/answers_photos.csv'
+DELIMITER ',' CSV HEADER;
 
 ALTER TABLE Answer ADD FOREIGN KEY (question_id) REFERENCES Question (id);
 ALTER TABLE Answer_Image ADD FOREIGN KEY (answer_id) REFERENCES Answer (id);
@@ -67,24 +53,12 @@ ALTER TABLE Answer_Image ADD FOREIGN KEY (answer_id) REFERENCES Answer (id);
 SELECT setval('question_id_seq', COALESCE((SELECT MAX(id)+1 FROM question), 1), false);
 SELECT setval('answer_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer), 1), false);
 SELECT setval('answer_image_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer_image), 1), false);
--- ---
--- Table Properties
--- ---
 
--- ALTER TABLE Product ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE Question ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE Answer ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE Answer Image ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
--- ---
--- Test Data
--- ---
-
--- INSERT INTO Product (product_id,results) VALUES
--- ('','');
--- INSERT INTO Question (question_id,question_body,question_date,asker_name,question_helpfulness,reported,product_id_Products) VALUES
--- ('','','','','','','');
--- INSERT INTO Answer (answer_id,body,date,answerer_name,helpfulness,question_id_Questions) VALUES
--- ('','','','','','');
--- INSERT INTO Answer Image (id,url,answer_id_Answers) VALUES
--- ('','','');
+CREATE INDEX question_index ON Question (id);
+CREATE INDEX answer_index ON Answer (id);
+CREATE INDEX image_index ON Answer_Image (id);
+CREATE INDEX questionID_index ON Answer (question_id);
+CREATE INDEX productID_index ON Question (product_id);
+CREATE INDEX answerImage_index ON Answer_Image (answer_id);
+CREATE INDEX questionReported_index ON Question (reported);
+CREATE INDEX answerReported_index ON Answer (reported);

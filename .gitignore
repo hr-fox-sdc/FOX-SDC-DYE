@@ -5,3 +5,9 @@ pool.js
 node_modules
 
 /data
+
+qanda.pgsql
+
+dye-sdc-fox.pem
+
+.env
