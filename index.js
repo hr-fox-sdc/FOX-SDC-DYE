@@ -1,6 +1,5 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const db = require('./queries')
 const qdb = require('./qandaqueries')
 const app = express()
 app.use(express.json())
