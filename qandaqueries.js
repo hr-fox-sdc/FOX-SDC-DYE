@@ -1,6 +1,7 @@
 const pool = require('./pool.js')
 
 const getQuestions = (req, res) => {
+
   let productID = req.body.product_id || req.params.product_id || req.query.product_id
   let count = req.body.count || req.params.count || 5
   let page = req.body.page || req.params.page || 1
@@ -245,52 +246,3 @@ module.exports = {
   answerHelpful,
   answerReport
 }
-
-
-/*
-FUNCTIONAL GET ANSWERS
-SELECT * FROM
-     (SELECT
-        answer.id AS "answer_id",
-        answer.body,
-        TO_CHAR(TO_TIMESTAMP(answer.date_written / 1000), 'DD/MM/YYYY HH24:MI:SS') AS "date",
-        answer.answerer_name,
-        answer.helpful AS "helpfulness",
-          (SELECT jsonb_agg(photos) FROM (SELECT answer_image.id, answer_image.url FROM answer_image where answer_id = answer.id) photos) AS "photos"
-      FROM answer where question_id = ${questionID} order by id limit ${count} offset ${(page * count) - count}) answers;`
-
-
-
-OPTIMIZED GET ANSWERS
-`SELECT json_build_object
-        (
-          'question', ${questionID},
-          'page', ${page},
-          'count', ${count},
-          'results',
-          (SELECT json_agg
-            (
-              (json_build_object
-                (
-                  'answer_id', id,
-                  'body', body,
-                  'date', TO_CHAR(TO_TIMESTAMP(date_written / 1000), 'DD/MM/YYYY HH24:MI:SS'),
-                  'answerer_name', answerer_name,
-                  'helpfulness', helpful,
-                  'photos',
-                    (SELECT json_agg
-                      (
-                        (json_build_object
-                          (
-                            'id', id,
-                            'url', url
-                          )
-                        )
-                      ) FROM Answer_Image where answer_id = answer.id
-                    )
-                )
-              )
-            ) FROM Answer WHERE question_id = ${questionID} LIMIT ${count} OFFSET ${(page * count) - count}
-          )
-        )`
-*/

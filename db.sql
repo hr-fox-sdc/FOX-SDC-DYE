@@ -5,8 +5,8 @@ CREATE TABLE Question (
   product_id INTEGER NOT NULL DEFAULT NULL,
   body VARCHAR(1000) NOT NULL,
   date_written BIGINT NOT NULL,
-  asker_name CHAR(60) NOT NULL,
-  asker_email CHAR(60) NOT NULL,
+  asker_name VARCHAR(60) NOT NULL,
+  asker_email VARCHAR(60) NOT NULL,
   reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
@@ -23,8 +23,8 @@ CREATE TABLE Answer (
   question_id INTEGER NOT NULL DEFAULT NULL,
   body VARCHAR(1000) NOT NULL,
   date_written BIGINT NOT NULL,
-  answerer_name CHAR(60) NOT NULL,
-  answerer_email CHAR(60) NOT NULL,
+  answerer_name VARCHAR(60) NOT NULL,
+  answerer_email VARCHAR(60) NOT NULL,
   reported BOOLEAN NOT NULL DEFAULT false,
   helpful INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
@@ -39,7 +39,7 @@ DROP TABLE IF EXISTS Answer_Image cascade;
 CREATE TABLE Answer_Image (
   id SERIAL,
   answer_id INTEGER NOT NULL DEFAULT NULL,
-  url CHAR(200) NOT NULL,
+  url VARCHAR(200) NOT NULL,
   PRIMARY KEY (id)
 );
 
@@ -54,11 +54,7 @@ SELECT setval('question_id_seq', COALESCE((SELECT MAX(id)+1 FROM question), 1), 
 SELECT setval('answer_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer), 1), false);
 SELECT setval('answer_image_id_seq', COALESCE((SELECT MAX(id)+1 FROM answer_image), 1), false);
 
-CREATE INDEX question_index ON Question (id);
-CREATE INDEX answer_index ON Answer (id);
-CREATE INDEX image_index ON Answer_Image (id);
 CREATE INDEX questionID_index ON Answer (question_id);
 CREATE INDEX productID_index ON Question (product_id);
-CREATE INDEX answerImage_index ON Answer_Image (answer_id);
 CREATE INDEX questionReported_index ON Question (reported);
-CREATE INDEX answerReported_index ON Answer (reported);
+CREATE INDEX answerImage_index ON Answer_Image (answer_id);
